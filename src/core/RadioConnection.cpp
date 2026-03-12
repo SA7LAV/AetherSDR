@@ -3,7 +3,10 @@
 
 namespace AetherSDR {
 
-static constexpr int HEARTBEAT_INTERVAL_MS = 5000;  // keepalive ping every 5 s
+// The SmartSDR TCP session is maintained by the socket itself on a LAN.
+// No application-level keepalive command exists in API v1.x.
+// The timer is kept here for future use (e.g. client_set commands, meters).
+static constexpr int HEARTBEAT_INTERVAL_MS = 30000;
 
 RadioConnection::RadioConnection(QObject* parent)
     : QObject(parent)
@@ -113,7 +116,9 @@ void RadioConnection::onReadyRead()
 
 void RadioConnection::onHeartbeat()
 {
-    sendCommand("keepalive");
+    // No-op: keepalive is not a valid command on API v1.x.
+    // If the radio requires periodic traffic (e.g. v2+ APIs), send
+    // a benign command such as "client program AetherSDR" here.
 }
 
 // ─── Line processing ──────────────────────────────────────────────────────────
@@ -137,12 +142,14 @@ void RadioConnection::processLine(const QString& line)
         m_heartbeat.start();
         emit connected();
 
-        // Subscribe to essential status streams after connection
+        // Subscribe to essential status streams after connection.
+        // "sub panadapter all" is invalid on API v1.x — omitted.
         sendCommand("sub slice all");
-        sendCommand("sub panadapter all");
         sendCommand("sub tx all");
         sendCommand("sub atu all");
         sendCommand("sub meter all");
+        // Higher-level requests (client identity, slice list) are sent
+        // by RadioModel::onConnected() where response callbacks are available.
         break;
 
     case MessageType::Response: {

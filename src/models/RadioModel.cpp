@@ -57,7 +57,28 @@ void RadioModel::onConnected()
     qDebug() << "RadioModel: connected";
     emit connectionStateChanged(true);
 
-    // Flush any slice commands that queued up before we connected
+    // Identify this client to the radio.
+    m_connection.sendCommand("client program AetherSDR");
+    m_connection.sendCommand("client station AetherSDR");
+
+    // Request the current slice list. On some firmware the radio pushes
+    // slice status automatically after "sub slice all"; on others we must
+    // request it explicitly. The response body is space-separated IDs, e.g. "0 1 2 3".
+    m_connection.sendCommand("slice list",
+        [this](int code, const QString& body) {
+            if (code != 0) {
+                qWarning() << "RadioModel: slice list failed, code" << Qt::hex << code;
+                return;
+            }
+            qDebug() << "RadioModel: slice list ->" << body;
+            for (const QString& idStr : body.trimmed().split(' ', Qt::SkipEmptyParts)) {
+                bool ok = false;
+                const int id = idStr.toInt(&ok);
+                if (ok) m_connection.sendCommand(QString("slice get %1").arg(id));
+            }
+        });
+
+    // Flush any slice commands that queued up before we connected.
     for (auto* s : m_slices) {
         for (const QString& cmd : s->drainPendingCommands())
             m_connection.sendCommand(cmd);
