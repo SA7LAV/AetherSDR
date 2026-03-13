@@ -17,6 +17,7 @@ namespace AetherSDR {
 class FrequencyDial;
 class ConnectionPanel;
 class SpectrumWidget;
+class AppletPanel;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -63,6 +64,9 @@ private:
     // GUI — main area
     SpectrumWidget*  m_spectrum{nullptr};
     FrequencyDial*   m_freqDial{nullptr};
+
+    // GUI — right applet panel
+    AppletPanel*     m_appletPanel{nullptr};
 
     // Controls strip
     QComboBox*   m_modeCombo{nullptr};

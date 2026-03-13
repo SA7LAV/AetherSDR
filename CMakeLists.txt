@@ -43,6 +43,8 @@ set(GUI_SOURCES
     src/gui/FrequencyDial.cpp
     src/gui/ConnectionPanel.cpp
     src/gui/SpectrumWidget.cpp
+    src/gui/AppletPanel.cpp
+    src/gui/RxApplet.cpp
 )
 
 set(ALL_SOURCES

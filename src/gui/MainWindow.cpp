@@ -2,6 +2,7 @@
 #include "FrequencyDial.h"
 #include "ConnectionPanel.h"
 #include "SpectrumWidget.h"
+#include "AppletPanel.h"
 #include "models/SliceModel.h"
 
 #include <QApplication>
@@ -143,13 +144,18 @@ void MainWindow::buildUI()
     m_connPanel->setFixedWidth(260);
     splitter->addWidget(m_connPanel);
 
-    // Right side — spectrum + controls
+    // Centre — spectrum + controls
     auto* rightWidget = new QWidget(splitter);
     auto* rightVBox   = new QVBoxLayout(rightWidget);
     rightVBox->setContentsMargins(4, 4, 4, 4);
     rightVBox->setSpacing(6);
     splitter->addWidget(rightWidget);
     splitter->setStretchFactor(1, 1);
+
+    // Right — applet panel
+    m_appletPanel = new AppletPanel(splitter);
+    splitter->addWidget(m_appletPanel);
+    splitter->setStretchFactor(2, 0);
 
     // Spectrum/panadapter
     m_spectrum = new SpectrumWidget(rightWidget);
@@ -325,8 +331,10 @@ void MainWindow::onSliceAdded(SliceModel* s)
 {
     qDebug() << "MainWindow: slice added" << s->sliceId();
     // Update controls to reflect the first (active) slice
-    if (m_radioModel.slices().size() == 1)
+    if (m_radioModel.slices().size() == 1) {
         updateSliceControls(s);
+        m_appletPanel->setSlice(s);
+    }
 
     // Forward slice frequency/mode changes → controls (guard prevents echo back to radio)
     connect(s, &SliceModel::frequencyChanged, this, [this](double mhz){

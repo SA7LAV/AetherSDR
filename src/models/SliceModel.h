@@ -33,12 +33,33 @@ public:
     float   rfGain()     const { return m_rfGain; }
     float   audioGain()  const { return m_audioGain; }
 
-    // Setters (emit signals AND queue radio commands via pendingCommands)
+    // Getters — RX DSP state
+    QString rxAntenna()   const { return m_rxAntenna; }
+    bool    nbOn()        const { return m_nb; }
+    bool    nrOn()        const { return m_nr; }
+    bool    anfOn()       const { return m_anf; }
+    QString agcMode()     const { return m_agcMode; }
+    bool    squelchOn()   const { return m_squelchOn; }
+    int     squelchLevel()const { return m_squelchLevel; }
+    bool    ritOn()       const { return m_ritOn; }
+    int     ritFreq()     const { return m_ritFreq; }
+    bool    xitOn()       const { return m_xitOn; }
+    int     xitFreq()     const { return m_xitFreq; }
+
+    // Setters (emit signals AND send radio commands)
     void setFrequency(double mhz);
     void setMode(const QString& mode);
     void setFilterWidth(int low, int high);
     void setAudioGain(float gain);
     void setRfGain(float gain);
+    void setRxAntenna(const QString& ant);
+    void setNb(bool on);
+    void setNr(bool on);
+    void setAnf(bool on);
+    void setAgcMode(const QString& mode);
+    void setSquelch(bool on, int level);
+    void setRit(bool on, int hz);
+    void setXit(bool on, int hz);
 
     // Apply a batch of KV pairs from a status message.
     void applyStatus(const QMap<QString, QString>& kvs);
@@ -52,11 +73,19 @@ signals:
     void filterChanged(int low, int high);
     void activeChanged(bool active);
     void txSliceChanged(bool tx);
+    void rxAntennaChanged(const QString& ant);
+    void nbChanged(bool on);
+    void nrChanged(bool on);
+    void anfChanged(bool on);
+    void agcModeChanged(const QString& mode);
+    void squelchChanged(bool on, int level);
+    void ritChanged(bool on, int hz);
+    void xitChanged(bool on, int hz);
     void commandReady(const QString& cmd);  // ready to send to radio
 
 private:
     int     m_id{0};
-    double  m_frequency{0.0};      // MHz (0 = unset; first status update always fires frequencyChanged)
+    double  m_frequency{0.0};
     QString m_mode{"USB"};
     int     m_filterLow{-1500};
     int     m_filterHigh{1500};
@@ -64,6 +93,19 @@ private:
     bool    m_txSlice{false};
     float   m_rfGain{0.0f};
     float   m_audioGain{50.0f};
+
+    // RX DSP state
+    QString m_rxAntenna{"ANT1"};
+    bool    m_nb{false};
+    bool    m_nr{false};
+    bool    m_anf{false};
+    QString m_agcMode{"med"};
+    bool    m_squelchOn{false};
+    int     m_squelchLevel{20};
+    bool    m_ritOn{false};
+    int     m_ritFreq{0};
+    bool    m_xitOn{false};
+    int     m_xitFreq{0};
 
     void sendCommand(const QString& cmd);
 
