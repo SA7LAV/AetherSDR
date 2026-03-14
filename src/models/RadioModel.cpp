@@ -347,8 +347,11 @@ void RadioModel::onStatusReceived(const QString& object,
     }
 
     // Interlock status: "interlock state=TRANSMITTING ..."
-    // TODO: track interlock state for TX button feedback
     if (object == "interlock") {
+        if (kvs.contains("state")) {
+            bool tx = (kvs["state"] == "TRANSMITTING");
+            m_transmitModel.setTransmitting(tx);
+        }
         return;
     }
 

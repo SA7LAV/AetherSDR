@@ -30,7 +30,7 @@ cmake --build build -j$(nproc)
 
 Dependencies (Arch): `qt6-base qt6-multimedia cmake ninja pkgconf`
 
-Current version: **0.1.8** (set in both `CMakeLists.txt` and `README.md`).
+Current version: **0.1.9** (set in both `CMakeLists.txt` and `README.md`).
 
 ---
 
@@ -316,7 +316,7 @@ them with `slice get <id>` rather than creating new ones.
 
 ---
 
-## What's Implemented (v0.1.8)
+## What's Implemented (v0.1.9)
 
 - UDP radio discovery and TCP command/control
 - SmartSDR V/H/R/S/M protocol parsing

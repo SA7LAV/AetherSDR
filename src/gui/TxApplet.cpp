@@ -327,6 +327,21 @@ void TxApplet::setTransmitModel(TransmitModel* model)
         }
     });
 
+    // MOX / transmit state → red button
+    connect(m_model, &TransmitModel::moxChanged, this, [this](bool tx) {
+        m_updatingFromModel = true;
+        m_moxBtn->setChecked(tx);
+        m_moxBtn->setStyleSheet(tx
+            ? "QPushButton { background: #cc2222; border: 1px solid #ff4444; "
+              "border-radius: 3px; color: #ffffff; font-size: 10px; font-weight: bold; "
+              "padding: 2px; }"
+            : "QPushButton { background: #1a3a5a; border: 1px solid #205070; "
+              "border-radius: 3px; color: #c8d8e8; font-size: 10px; font-weight: bold; "
+              "padding: 2px; }"
+              "QPushButton:hover { background: #204060; }");
+        m_updatingFromModel = false;
+    });
+
     // ATU state changes → indicators
     connect(m_model, &TransmitModel::atuStateChanged, this, &TxApplet::syncAtuIndicators);
 

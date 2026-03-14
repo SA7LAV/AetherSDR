@@ -42,8 +42,15 @@ public:
     bool    nbOn()        const { return m_nb; }
     bool    nrOn()        const { return m_nr; }
     bool    anfOn()       const { return m_anf; }
+    bool    nrlOn()       const { return m_nrl; }
+    bool    nrsOn()       const { return m_nrs; }
+    bool    rnnOn()       const { return m_rnn; }
+    bool    nrfOn()       const { return m_nrf; }
+    bool    anflOn()      const { return m_anfl; }
+    bool    anftOn()      const { return m_anft; }
     QString agcMode()      const { return m_agcMode; }
     int     agcThreshold() const { return m_agcThreshold; }
+    bool    audioMute()   const { return m_audioMute; }
     bool    squelchOn()   const { return m_squelchOn; }
     int     squelchLevel()const { return m_squelchLevel; }
     bool    ritOn()       const { return m_ritOn; }
@@ -58,6 +65,7 @@ public:
     void setAudioGain(float gain);
     void setRfGain(float gain);
     void setAudioPan(int pan);
+    void setAudioMute(bool mute);
     void setRxAntenna(const QString& ant);
     void setTxAntenna(const QString& ant);
     void setLocked(bool locked);
@@ -65,11 +73,18 @@ public:
     void setNb(bool on);
     void setNr(bool on);
     void setAnf(bool on);
+    void setNrl(bool on);
+    void setNrs(bool on);
+    void setRnn(bool on);
+    void setNrf(bool on);
+    void setAnfl(bool on);
+    void setAnft(bool on);
     void setAgcMode(const QString& mode);
     void setAgcThreshold(int value);
     void setSquelch(bool on, int level);
     void setRit(bool on, int hz);
     void setXit(bool on, int hz);
+    void setTxSlice(bool on);
 
     // Apply a batch of KV pairs from a status message.
     void applyStatus(const QMap<QString, QString>& kvs);
@@ -91,8 +106,15 @@ signals:
     void nbChanged(bool on);
     void nrChanged(bool on);
     void anfChanged(bool on);
+    void nrlChanged(bool on);
+    void nrsChanged(bool on);
+    void rnnChanged(bool on);
+    void nrfChanged(bool on);
+    void anflChanged(bool on);
+    void anftChanged(bool on);
     void agcModeChanged(const QString& mode);
     void agcThresholdChanged(int value);
+    void audioMuteChanged(bool mute);
     void squelchChanged(bool on, int level);
     void ritChanged(bool on, int hz);
     void xitChanged(bool on, int hz);
@@ -115,9 +137,16 @@ private:
     QString m_txAntenna{"ANT1"};
     bool    m_locked{false};
     bool    m_qsk{false};
+    bool    m_audioMute{false};
     bool    m_nb{false};
     bool    m_nr{false};
     bool    m_anf{false};
+    bool    m_nrl{false};
+    bool    m_nrs{false};
+    bool    m_rnn{false};
+    bool    m_nrf{false};
+    bool    m_anfl{false};
+    bool    m_anft{false};
     QString m_agcMode{"med"};
     int     m_agcThreshold{65};
     bool    m_squelchOn{false};

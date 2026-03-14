@@ -2,6 +2,7 @@
 
 #include <QWidget>
 
+class QHBoxLayout;
 class QPushButton;
 class QSlider;
 class QLabel;
@@ -41,6 +42,9 @@ signals:
     // Emitted when the user changes the tuning step size (Hz).
     void stepSizeChanged(int hz);
 
+protected:
+    bool eventFilter(QObject* obj, QEvent* ev) override;
+
 private:
     void buildUI();
     void connectSlice(SliceModel* s);
@@ -69,6 +73,10 @@ private:
     QPushButton* m_txAntBtn{nullptr};     // TX antenna dropdown (red)
     QLabel*      m_filterWidthLbl{nullptr}; // current filter width e.g. "2.7K"
     QPushButton* m_qskBtn{nullptr};       // QSK toggle
+    QHBoxLayout* m_freqRow{nullptr};       // frequency display row
+    QPushButton* m_txBadge{nullptr};       // TX slice indicator (click to set as TX slice)
+    QComboBox*   m_modeCombo{nullptr};     // mode selector (USB, LSB, CW, etc.)
+    QLabel*      m_freqLabel{nullptr};     // frequency readout e.g. "14.289.510"
 
     // Filter presets (Hz widths)
     static constexpr int FILTER_WIDTHS[6] = {1800, 2100, 2400, 2700, 3300, 6000};
@@ -78,32 +86,37 @@ private:
     static constexpr const char* AGC_MODES[4] = {"off", "slow", "med", "fast"};
     QComboBox*   m_agcCombo{nullptr};
     QSlider*     m_agcTSlider{nullptr};
-    QLabel*      m_agcTLabel{nullptr};
 
     // AF gain + audio pan
+    QPushButton* m_muteBtn{nullptr};
     QSlider*     m_afSlider{nullptr};
-    QLabel*      m_afLabel{nullptr};
     QSlider*     m_panSlider{nullptr};
-    QLabel*      m_panLabel{nullptr};
 
     // Squelch
     QPushButton* m_sqlBtn{nullptr};
     QSlider*     m_sqlSlider{nullptr};
-    QLabel*      m_sqlLabel{nullptr};
 
     // DSP
     QPushButton* m_nbBtn{nullptr};
     QPushButton* m_nrBtn{nullptr};
     QPushButton* m_anfBtn{nullptr};
+    QPushButton* m_nrlBtn{nullptr};
+    QPushButton* m_nrsBtn{nullptr};
+    QPushButton* m_rnnBtn{nullptr};
+    QPushButton* m_nrfBtn{nullptr};
+    QPushButton* m_anflBtn{nullptr};
+    QPushButton* m_anftBtn{nullptr};
 
     // RIT
     QPushButton* m_ritOnBtn{nullptr};
+    QPushButton* m_ritZero{nullptr};
     QPushButton* m_ritMinus{nullptr};
     QLabel*      m_ritLabel{nullptr};
     QPushButton* m_ritPlus{nullptr};
 
     // XIT
     QPushButton* m_xitOnBtn{nullptr};
+    QPushButton* m_xitZero{nullptr};
     QPushButton* m_xitMinus{nullptr};
     QLabel*      m_xitLabel{nullptr};
     QPushButton* m_xitPlus{nullptr};

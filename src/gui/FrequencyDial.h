@@ -47,7 +47,7 @@ private:
     static constexpr int DIGIT_WIDTH   = 28;
     static constexpr int DIGIT_HEIGHT  = 56;
     static constexpr int DOT_WIDTH     = 12;
-    static constexpr double MAX_FREQ   = 54.0;   // MHz (FLEX-6600 range)
+    static constexpr double MAX_FREQ   = 999.0;  // MHz (supports transverters)
     static constexpr double MIN_FREQ   = 0.001;  // MHz
 
     // Column layout: digits 0..2 = MHz hundreds/tens/units,

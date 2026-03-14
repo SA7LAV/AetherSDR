@@ -3,7 +3,7 @@
 A Linux-native SmartSDR-compatible client for FlexRadio Systems transceivers,
 built with **Qt6** and **C++20**.
 
-Current version: **0.1.8**
+Current version: **0.1.9**
 
 ---
 
@@ -28,11 +28,19 @@ Current version: **0.1.8**
 | Audio RX via VITA-49 PCC routing + Qt Multimedia | ✅ |
 | RX applet — antenna select (RX/TX), filter presets, AGC mode+threshold | ✅ |
 | RX applet — AF gain, audio pan (L/R balance), squelch | ✅ |
-| RX applet — NB / NR / ANF DSP toggles | ✅ |
-| RX applet — RIT / XIT with ± step buttons | ✅ |
+| RX applet — NB / NR / ANF + NRL / NRS / RNN / NRF / ANFL / ANFT DSP toggles | ✅ |
+| RX applet — RIT / XIT with zero-reset, ± step buttons | ✅ |
 | RX applet — tuning step size stepper (10 Hz – 10 kHz) | ✅ |
 | RX applet — tune lock (slice lock/unlock) | ✅ |
+| RX applet — two-column compact layout (SmartSDR-style) | ✅ |
+| RX applet — inline frequency display with per-digit scroll tuning | ✅ |
+| RX applet — TX slice badge (clickable, red when active TX) | ✅ |
+| RX applet — mode selector combo in header row | ✅ |
+| RX applet — audio mute toggle (speaker icon) | ✅ |
+| RX applet — slider hover tooltips (AF, pan, SQL, AGC-T) | ✅ |
+| RX applet — balance slider center marker | ✅ |
 | Freq dial — hover-column scroll-wheel tuning (per-digit) | ✅ |
+| Freq dial — supports up to 999 MHz (transverter support) | ✅ |
 | Spectrum — click-to-tune snaps to step size | ✅ |
 | Spectrum — scroll-wheel tunes by step size | ✅ |
 | AppletPanel — toggle-button row (ANLG, RX, TX, PHNE, P/CW, EQ) | ✅ |
@@ -45,6 +53,7 @@ Current version: **0.1.8**
 | TX applet — TX profile dropdown (live from radio) | ✅ |
 | TX applet — TUNE/MOX/ATU/MEM buttons + ATU status indicators | ✅ |
 | TX applet — APD button with Active/Cal/Avail status inset | ✅ |
+| TX applet — MOX button turns red during transmit (interlock state) | ✅ |
 | TransmitModel — transmit state, ATU state, profile management | ✅ |
 | P/CW applet — mic level gauge with peak hold (-40 to +10 dB, 3-zone) | ✅ |
 | P/CW applet — compression gauge (reversed fill, peak hold with slow decay) | ✅ |
@@ -242,6 +251,27 @@ model-driven dial updates back to the radio.
 ---
 
 ## Changelog
+
+### v0.1.9
+- RX applet major restyle: two-column compact layout matching SmartSDR appearance
+- RX applet: inline frequency display with per-digit mousewheel tuning
+- RX applet: TX slice badge (clickable to set active TX slice, red when active)
+- RX applet: mode selector combo box in frequency header row
+- RX applet: audio mute toggle (speaker emoji icon) replaces AF label
+- RX applet: slider hover tooltips for AF gain, balance, squelch, AGC threshold
+- RX applet: balance slider center-mark dot for visual center reference
+- RX applet: v4 DSP toggles — NRL (LMS NR), NRS (Speex NR), RNN (AI NR),
+  NRF, ANFL (LMS ANF), ANFT (FFT ANF) with correct command key mapping
+  (status keys differ from command keys per FlexLib Slice.cs)
+- RX applet: RIT/XIT zero-reset button between toggle and decrement
+- RX applet: removed redundant labels (Filter:, AGC:, slider values) for
+  tighter layout; AGC moved to right column below squelch
+- SliceModel: added audio_mute support (get/set/status parsing/signal)
+- SliceModel: added v4 DSP toggle state for NRL/NRS/RNN/NRF/ANFL/ANFT
+- TransmitModel: interlock state parsing (TRANSMITTING/RECEIVE/READY)
+- TX applet: MOX button turns red during transmit via interlock status
+- PHONE applet: triangle buttons (painted QPushButton) replace text < > buttons
+- FrequencyDial: MAX_FREQ raised to 999 MHz for transverter support
 
 ### v0.1.8
 - EQ applet: 8-band graphic equalizer (63 Hz – 8 kHz) with vertical sliders

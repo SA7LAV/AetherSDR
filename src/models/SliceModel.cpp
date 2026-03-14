@@ -95,6 +95,49 @@ void SliceModel::setAnf(bool on)
     emit anfChanged(on);
 }
 
+// v4 DSP toggles — command keys differ from status keys (FlexLib Slice.cs)
+void SliceModel::setNrl(bool on)
+{
+    m_nrl = on;
+    sendCommand(QString("slice set %1 lms_nr=%2").arg(m_id).arg(on ? 1 : 0));
+    emit nrlChanged(on);
+}
+
+void SliceModel::setNrs(bool on)
+{
+    m_nrs = on;
+    sendCommand(QString("slice set %1 speex_nr=%2").arg(m_id).arg(on ? 1 : 0));
+    emit nrsChanged(on);
+}
+
+void SliceModel::setRnn(bool on)
+{
+    m_rnn = on;
+    sendCommand(QString("slice set %1 rnnoise=%2").arg(m_id).arg(on ? 1 : 0));
+    emit rnnChanged(on);
+}
+
+void SliceModel::setNrf(bool on)
+{
+    m_nrf = on;
+    sendCommand(QString("slice set %1 nrf=%2").arg(m_id).arg(on ? 1 : 0));
+    emit nrfChanged(on);
+}
+
+void SliceModel::setAnfl(bool on)
+{
+    m_anfl = on;
+    sendCommand(QString("slice set %1 lms_anf=%2").arg(m_id).arg(on ? 1 : 0));
+    emit anflChanged(on);
+}
+
+void SliceModel::setAnft(bool on)
+{
+    m_anft = on;
+    sendCommand(QString("slice set %1 anft=%2").arg(m_id).arg(on ? 1 : 0));
+    emit anftChanged(on);
+}
+
 void SliceModel::setAgcMode(const QString& mode)
 {
     if (m_agcMode == mode) return;
@@ -139,6 +182,11 @@ void SliceModel::setXit(bool on, int hz)
     emit xitChanged(on, hz);
 }
 
+void SliceModel::setTxSlice(bool on)
+{
+    sendCommand(QString("slice set %1 tx=%2").arg(m_id).arg(on ? 1 : 0));
+}
+
 void SliceModel::setAudioGain(float gain)
 {
     m_audioGain = qBound(0.0f, gain, 100.0f);
@@ -152,6 +200,14 @@ void SliceModel::setRfGain(float gain)
 {
     m_rfGain = gain;
     sendCommand(QString("slice set %1 rf_gain=%2").arg(m_id).arg(static_cast<int>(gain)));
+}
+
+void SliceModel::setAudioMute(bool mute)
+{
+    if (m_audioMute == mute) return;
+    m_audioMute = mute;
+    sendCommand(QString("slice set %1 audio_mute=%2").arg(m_id).arg(mute ? 1 : 0));
+    emit audioMuteChanged(mute);
 }
 
 void SliceModel::setAudioPan(int pan)
@@ -193,8 +249,13 @@ void SliceModel::applyStatus(const QMap<QString, QString>& kvs)
     }
     if (kvs.contains("active"))
         m_active = kvs["active"] == "1";
-    if (kvs.contains("tx"))
-        m_txSlice = kvs["tx"] == "1";
+    if (kvs.contains("tx")) {
+        bool tx = kvs["tx"] == "1";
+        if (tx != m_txSlice) {
+            m_txSlice = tx;
+            emit txSliceChanged(tx);
+        }
+    }
     if (kvs.contains("rf_gain"))
         m_rfGain = kvs["rf_gain"].toFloat();
     if (kvs.contains("audio_gain"))
@@ -202,6 +263,13 @@ void SliceModel::applyStatus(const QMap<QString, QString>& kvs)
     if (kvs.contains("audio_pan")) {
         m_audioPan = kvs["audio_pan"].toInt();
         emit audioPanChanged(m_audioPan);
+    }
+    if (kvs.contains("audio_mute")) {
+        bool mute = kvs["audio_mute"] == "1";
+        if (mute != m_audioMute) {
+            m_audioMute = mute;
+            emit audioMuteChanged(mute);
+        }
     }
 
     // Slice control state
@@ -233,6 +301,30 @@ void SliceModel::applyStatus(const QMap<QString, QString>& kvs)
     if (kvs.contains("anf")) {
         m_anf = kvs["anf"] == "1";
         emit anfChanged(m_anf);
+    }
+    if (kvs.contains("nrl")) {
+        m_nrl = kvs["nrl"] == "1";
+        emit nrlChanged(m_nrl);
+    }
+    if (kvs.contains("nrs")) {
+        m_nrs = kvs["nrs"] == "1";
+        emit nrsChanged(m_nrs);
+    }
+    if (kvs.contains("rnn")) {
+        m_rnn = kvs["rnn"] == "1";
+        emit rnnChanged(m_rnn);
+    }
+    if (kvs.contains("nrf")) {
+        m_nrf = kvs["nrf"] == "1";
+        emit nrfChanged(m_nrf);
+    }
+    if (kvs.contains("anfl")) {
+        m_anfl = kvs["anfl"] == "1";
+        emit anflChanged(m_anfl);
+    }
+    if (kvs.contains("anft")) {
+        m_anft = kvs["anft"] == "1";
+        emit anftChanged(m_anft);
     }
     if (kvs.contains("agc_mode")) {
         m_agcMode = kvs["agc_mode"];

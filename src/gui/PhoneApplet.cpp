@@ -8,8 +8,44 @@
 #include <QHBoxLayout>
 #include <QSignalBlocker>
 #include <QFrame>
+#include <QPainter>
 
 namespace AetherSDR {
+
+// ── Triangle step button (reused from RxApplet pattern) ─────────────────────
+
+class PhoneTriBtn : public QPushButton {
+public:
+    enum Dir { Left, Right };
+    explicit PhoneTriBtn(Dir dir, QWidget* parent = nullptr)
+        : QPushButton(parent), m_dir(dir)
+    {
+        setFlat(false);
+        setFixedSize(22, 22);
+        setStyleSheet(
+            "QPushButton { background: #1a2a3a; border: 1px solid #203040; "
+            "border-radius: 3px; padding: 0; margin: 0; min-width: 0; min-height: 0; }"
+            "QPushButton:hover { background: #203040; }"
+            "QPushButton:pressed { background: #00b4d8; }");
+    }
+protected:
+    void paintEvent(QPaintEvent* ev) override {
+        QPushButton::paintEvent(ev);
+        QPainter p(this);
+        p.setRenderHint(QPainter::Antialiasing);
+        p.setBrush(isDown() ? QColor(0, 0, 0) : QColor(0xc8, 0xd8, 0xe8));
+        p.setPen(Qt::NoPen);
+        const int cx = width() / 2, cy = height() / 2;
+        QPolygon tri;
+        if (m_dir == Left)
+            tri << QPoint(cx - 5, cy) << QPoint(cx + 4, cy - 5) << QPoint(cx + 4, cy + 5);
+        else
+            tri << QPoint(cx + 5, cy) << QPoint(cx - 4, cy - 5) << QPoint(cx - 4, cy + 5);
+        p.drawPolygon(tri);
+    }
+private:
+    Dir m_dir;
+};
 
 // ── Shared gradient title bar (matches AppletPanel / TxApplet style) ─────────
 
@@ -242,9 +278,7 @@ void PhoneApplet::buildUI()
         txLbl->setFixedWidth(18);
         lowRow->addWidget(txLbl);
 
-        m_lowCutDown = new QPushButton("<");
-        m_lowCutDown->setFixedSize(18, 20);
-        m_lowCutDown->setStyleSheet(kStepBtnStyle);
+        m_lowCutDown = new PhoneTriBtn(PhoneTriBtn::Left);
         connect(m_lowCutDown, &QPushButton::clicked, this, [this]() {
             if (m_model) m_model->setTxFilterLow(qMax(0, m_model->txFilterLow() - 50));
         });
@@ -258,9 +292,7 @@ void PhoneApplet::buildUI()
             "border: 1px solid #1e2e3e; border-radius: 3px; padding: 1px 3px; }");
         lowRow->addWidget(m_lowCutLabel);
 
-        m_lowCutUp = new QPushButton(">");
-        m_lowCutUp->setFixedSize(18, 20);
-        m_lowCutUp->setStyleSheet(kStepBtnStyle);
+        m_lowCutUp = new PhoneTriBtn(PhoneTriBtn::Right);
         connect(m_lowCutUp, &QPushButton::clicked, this, [this]() {
             if (m_model) m_model->setTxFilterLow(
                 qMin(m_model->txFilterHigh() - 50, m_model->txFilterLow() + 50));
@@ -284,9 +316,7 @@ void PhoneApplet::buildUI()
         auto* highRow = new QHBoxLayout;
         highRow->setSpacing(2);
 
-        m_highCutDown = new QPushButton("<");
-        m_highCutDown->setFixedSize(18, 20);
-        m_highCutDown->setStyleSheet(kStepBtnStyle);
+        m_highCutDown = new PhoneTriBtn(PhoneTriBtn::Left);
         connect(m_highCutDown, &QPushButton::clicked, this, [this]() {
             if (m_model) m_model->setTxFilterHigh(
                 qMax(m_model->txFilterLow() + 50, m_model->txFilterHigh() - 50));
@@ -301,9 +331,7 @@ void PhoneApplet::buildUI()
             "border: 1px solid #1e2e3e; border-radius: 3px; padding: 1px 3px; }");
         highRow->addWidget(m_highCutLabel);
 
-        m_highCutUp = new QPushButton(">");
-        m_highCutUp->setFixedSize(18, 20);
-        m_highCutUp->setStyleSheet(kStepBtnStyle);
+        m_highCutUp = new PhoneTriBtn(PhoneTriBtn::Right);
         connect(m_highCutUp, &QPushButton::clicked, this, [this]() {
             if (m_model) m_model->setTxFilterHigh(
                 qMin(10000, m_model->txFilterHigh() + 50));

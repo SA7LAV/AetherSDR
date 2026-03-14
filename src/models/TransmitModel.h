@@ -39,6 +39,8 @@ public:
     int     tunePower()     const { return m_tunePower; }
     bool    isTuning()      const { return m_tune; }
     bool    isMox()         const { return m_mox; }
+    bool    isTransmitting() const { return m_transmitting; }
+    void    setTransmitting(bool tx);
 
     // ── Mic / monitor / processor getters ─────────────────────────────────
     QString micSelection()          const { return m_micSelection; }
@@ -162,6 +164,7 @@ private:
     int  m_tunePower{10};
     bool m_tune{false};
     bool m_mox{false};
+    bool m_transmitting{false};
 
     // Mic / monitor / processor state
     QString m_micSelection{"MIC"};

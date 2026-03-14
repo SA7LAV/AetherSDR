@@ -228,6 +228,13 @@ void TransmitModel::setMox(bool on)
     emit commandReady(QString("xmit %1").arg(on ? 1 : 0));
 }
 
+void TransmitModel::setTransmitting(bool tx)
+{
+    if (tx == m_transmitting) return;
+    m_transmitting = tx;
+    emit moxChanged(tx);
+}
+
 void TransmitModel::atuStart()
 {
     emit commandReady("atu start");
