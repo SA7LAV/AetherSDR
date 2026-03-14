@@ -52,6 +52,29 @@ public:
     bool    sbMonitor()             const { return m_sbMonitor; }
     int     monGainSb()             const { return m_monGainSb; }
 
+    // ── VOX getters ───────────────────────────────────────────────────────
+    bool    voxEnable()     const { return m_voxEnable; }
+    int     voxLevel()      const { return m_voxLevel; }
+    int     voxDelay()      const { return m_voxDelay; }
+    bool    micBoost()      const { return m_micBoost; }
+    int     amCarrierLevel() const { return m_amCarrierLevel; }
+    bool    dexpOn()         const { return m_dexpOn; }
+    int     dexpLevel()      const { return m_dexpLevel; }
+    int     txFilterLow()    const { return m_txFilterLow; }
+    int     txFilterHigh()   const { return m_txFilterHigh; }
+
+    // ── CW getters ──────────────────────────────────────────────────────
+    int     cwSpeed()       const { return m_cwSpeed; }
+    int     cwPitch()       const { return m_cwPitch; }
+    bool    cwBreakIn()     const { return m_cwBreakIn; }
+    int     cwDelay()       const { return m_cwDelay; }
+    bool    cwSidetone()    const { return m_cwSidetone; }
+    bool    cwIambic()      const { return m_cwIambic; }
+    int     cwIambicMode()  const { return m_cwIambicMode; }  // 0=A, 1=B
+    bool    cwSwapPaddles() const { return m_cwSwapPaddles; }
+    bool    cwlEnabled()    const { return m_cwlEnabled; }
+    int     monGainCw()     const { return m_monGainCw; }
+
     // ── ATU getters ─────────────────────────────────────────────────────────
     bool      atuEnabled()      const { return m_atuEnabled; }
     ATUStatus atuStatus()       const { return m_atuStatus; }
@@ -96,6 +119,29 @@ public:
     void setMonGainSb(int gain);
     void loadMicProfile(const QString& name);
 
+    // ── VOX commands ────────────────────────────────────────────────────────
+    void setVoxEnable(bool on);
+    void setVoxLevel(int level);
+    void setVoxDelay(int delay);
+    void setMicBoost(bool on);
+    void setAmCarrierLevel(int level);
+    void setDexp(bool on);
+    void setDexpLevel(int level);
+    void setTxFilterLow(int hz);
+    void setTxFilterHigh(int hz);
+
+    // ── CW commands ─────────────────────────────────────────────────────────
+    void setCwSpeed(int wpm);
+    void setCwPitch(int hz);
+    void setCwBreakIn(bool on);
+    void setCwDelay(int ms);
+    void setCwSidetone(bool on);
+    void setCwIambic(bool on);
+    void setCwIambicMode(int mode);   // 0=A, 1=B
+    void setCwSwapPaddles(bool on);
+    void setCwlEnabled(bool on);
+    void setMonGainCw(int gain);
+
 signals:
     void stateChanged();
     void tuneChanged(bool tuning);
@@ -105,6 +151,7 @@ signals:
     void micStateChanged();
     void micProfileListChanged();
     void micInputListChanged();
+    void phoneStateChanged();       // VOX or CW property changed
     void commandReady(const QString& cmd);
 
 private:
@@ -127,6 +174,29 @@ private:
     bool    m_daxOn{false};
     bool    m_sbMonitor{false};
     int     m_monGainSb{50};
+
+    // VOX / phone state
+    bool m_voxEnable{false};
+    int  m_voxLevel{50};
+    int  m_voxDelay{50};      // raw 0–100, actual ms = value × 20
+    bool m_micBoost{false};
+    int  m_amCarrierLevel{48};  // 0–100
+    bool m_dexpOn{false};       // downward expander (noise gate)
+    int  m_dexpLevel{0};        // noise gate level (0–100)
+    int  m_txFilterLow{50};     // TX filter low cut (Hz)
+    int  m_txFilterHigh{3300};  // TX filter high cut (Hz)
+
+    // CW state
+    int  m_cwSpeed{20};       // 5–100 WPM
+    int  m_cwPitch{600};      // 100–6000 Hz
+    bool m_cwBreakIn{false};
+    int  m_cwDelay{500};      // 0–2000 ms
+    bool m_cwSidetone{true};
+    bool m_cwIambic{true};
+    int  m_cwIambicMode{0};   // 0=A, 1=B
+    bool m_cwSwapPaddles{false};
+    bool m_cwlEnabled{false};
+    int  m_monGainCw{50};
 
     // ATU state
     bool      m_atuEnabled{false};

@@ -15,6 +15,7 @@ class SMeterWidget;
 class TunerApplet;
 class TxApplet;
 class PhoneCwApplet;
+class PhoneApplet;
 
 // AppletPanel — right-side panel with a row of toggle buttons at the top,
 // an S-Meter gauge below them, and a scrollable stack of applets.
@@ -33,6 +34,7 @@ public:
     TunerApplet*  tunerApplet()   { return m_tunerApplet; }
     TxApplet*       txApplet()       { return m_txApplet; }
     PhoneCwApplet*  phoneCwApplet()  { return m_phoneCwApplet; }
+    PhoneApplet*    phoneApplet()    { return m_phoneApplet; }
 
     // Show/hide the TUNE button and applet based on tuner presence.
     void setTunerVisible(bool visible);
@@ -44,6 +46,7 @@ private:
     TunerApplet* m_tunerApplet{nullptr};
     TxApplet*      m_txApplet{nullptr};
     PhoneCwApplet* m_phoneCwApplet{nullptr};
+    PhoneApplet*   m_phoneApplet{nullptr};
     QPushButton* m_tuneBtn{nullptr}; // TUNE toggle button (hidden until TGXL detected)
     QVBoxLayout* m_stack{nullptr};   // layout inside the scroll area
 };

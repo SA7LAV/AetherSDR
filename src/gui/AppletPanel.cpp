@@ -4,6 +4,7 @@
 #include "TunerApplet.h"
 #include "TxApplet.h"
 #include "PhoneCwApplet.h"
+#include "PhoneApplet.h"
 
 #include <QPushButton>
 #include <QScrollArea>
@@ -150,7 +151,8 @@ AppletPanel::AppletPanel(QWidget* parent) : QWidget(parent)
     static_cast<QPushButton*>(btnLayout->itemAt(btnLayout->count() - 1)->widget())->setChecked(true);
     m_txApplet->show();
 
-    addApplet("PHNE", makePlaceholder("PHNE"));
+    m_phoneApplet = new PhoneApplet;
+    addApplet("PHNE", m_phoneApplet);
 
     // P/CW applet — visible by default
     m_phoneCwApplet = new PhoneCwApplet;

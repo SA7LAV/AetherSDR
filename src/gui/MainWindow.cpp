@@ -8,6 +8,7 @@
 #include "TunerApplet.h"
 #include "TxApplet.h"
 #include "PhoneCwApplet.h"
+#include "PhoneApplet.h"
 #include "models/SliceModel.h"
 #include "models/MeterModel.h"
 #include "models/TunerModel.h"
@@ -137,6 +138,9 @@ MainWindow::MainWindow(QWidget* parent)
     connect(m_radioModel.meterModel(), &MeterModel::micMetersChanged,
             m_appletPanel->phoneCwApplet(), &PhoneCwApplet::updateMeters);
     m_appletPanel->phoneCwApplet()->setTransmitModel(m_radioModel.transmitModel());
+
+    // ── PHNE applet: VOX + CW controls ──────────────────────────────────────
+    m_appletPanel->phoneApplet()->setTransmitModel(m_radioModel.transmitModel());
 
     // ── Audio level meter ──────────────────────────────────────────────────
     connect(&m_audio, &AudioEngine::levelChanged,

@@ -1,0 +1,378 @@
+#include "PhoneApplet.h"
+#include "models/TransmitModel.h"
+
+#include <QPushButton>
+#include <QLabel>
+#include <QSlider>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QSignalBlocker>
+#include <QFrame>
+
+namespace AetherSDR {
+
+// ── Shared gradient title bar (matches AppletPanel / TxApplet style) ─────────
+
+static QWidget* appletTitleBar(const QString& text)
+{
+    auto* bar = new QWidget;
+    bar->setFixedHeight(16);
+    bar->setStyleSheet(
+        "QWidget { background: qlineargradient(x1:0,y1:0,x2:0,y2:1,"
+        "stop:0 #3a4a5a, stop:0.5 #2a3a4a, stop:1 #1a2a38); "
+        "border-bottom: 1px solid #0a1a28; }");
+
+    auto* lbl = new QLabel(text, bar);
+    lbl->setStyleSheet("QLabel { background: transparent; color: #8aa8c0; "
+                       "font-size: 10px; font-weight: bold; }");
+    lbl->setGeometry(6, 1, 240, 14);
+    return bar;
+}
+
+// ── Style constants ──────────────────────────────────────────────────────────
+
+static constexpr const char* kSliderStyle =
+    "QSlider::groove:horizontal { height: 4px; background: #203040; border-radius: 2px; }"
+    "QSlider::handle:horizontal { width: 10px; height: 10px; margin: -3px 0;"
+    "background: #00b4d8; border-radius: 5px; }";
+
+static const QString kGreenActive =
+    "QPushButton:checked { background-color: #006040; color: #00ff88; "
+    "border: 1px solid #00a060; }";
+
+static const QString kBlueActive =
+    "QPushButton:checked { background-color: #0070c0; color: #ffffff; "
+    "border: 1px solid #0090e0; }";
+
+static const QString kBtnBase =
+    "QPushButton { background-color: #1a2a3a; color: #c8d8e8; "
+    "border: 1px solid #205070; border-radius: 3px; font-size: 11px; "
+    "font-weight: bold; padding: 2px 4px; }";
+
+// Small step button style (< > for filter cut)
+static const QString kStepBtnStyle =
+    "QPushButton { background-color: #1a2a3a; color: #c8d8e8; "
+    "border: 1px solid #205070; border-radius: 2px; font-size: 11px; "
+    "font-weight: bold; padding: 0px; }";
+
+// ── PhoneApplet ──────────────────────────────────────────────────────────────
+
+PhoneApplet::PhoneApplet(QWidget* parent)
+    : QWidget(parent)
+{
+    buildUI();
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    setVisible(false);
+}
+
+void PhoneApplet::buildUI()
+{
+    auto* outer = new QVBoxLayout(this);
+    outer->setContentsMargins(0, 0, 0, 0);
+    outer->setSpacing(0);
+    outer->addWidget(appletTitleBar("PHONE"));
+
+    auto* vbox = new QVBoxLayout;
+    vbox->setContentsMargins(4, 2, 8, 4);
+    vbox->setSpacing(4);
+    outer->addLayout(vbox);
+
+    // ── AM Carrier row ───────────────────────────────────────────────────
+    {
+        auto* rowW = new QWidget;
+        rowW->setFixedHeight(24);
+        auto* row = new QHBoxLayout(rowW);
+        row->setContentsMargins(0, 0, 0, 0);
+        row->setSpacing(4);
+
+        auto* lbl = new QLabel("AM\nCarrier:");
+        lbl->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        lbl->setStyleSheet("QLabel { color: #8090a0; font-size: 11px; }");
+        lbl->setFixedWidth(52);
+        row->addWidget(lbl);
+        row->addSpacing(10);
+
+        m_amCarrierSlider = new QSlider(Qt::Horizontal);
+        m_amCarrierSlider->setRange(0, 100);
+        m_amCarrierSlider->setStyleSheet(kSliderStyle);
+        connect(m_amCarrierSlider, &QSlider::valueChanged, this, [this](int v) {
+            if (!m_updatingFromModel && m_model) m_model->setAmCarrierLevel(v);
+            m_amCarrierLabel->setText(QString::number(v));
+        });
+        row->addWidget(m_amCarrierSlider, 1);
+
+        m_amCarrierLabel = new QLabel("48");
+        m_amCarrierLabel->setFixedWidth(26);
+        m_amCarrierLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        m_amCarrierLabel->setStyleSheet("QLabel { color: #c8d8e8; font-size: 11px; }");
+        row->addWidget(m_amCarrierLabel);
+
+        vbox->addWidget(rowW);
+    }
+
+    // ── VOX row: toggle + level slider ───────────────────────────────────
+    {
+        auto* rowW = new QWidget;
+        rowW->setFixedHeight(24);
+        auto* row = new QHBoxLayout(rowW);
+        row->setContentsMargins(0, 0, 0, 0);
+        row->setSpacing(4);
+
+        m_voxBtn = new QPushButton("VOX");
+        m_voxBtn->setCheckable(true);
+        m_voxBtn->setFixedSize(52, 22);
+        m_voxBtn->setStyleSheet(kBtnBase + kGreenActive);
+        connect(m_voxBtn, &QPushButton::toggled, this, [this](bool on) {
+            if (!m_updatingFromModel && m_model) m_model->setVoxEnable(on);
+        });
+        row->addWidget(m_voxBtn);
+        row->addSpacing(10);
+
+        m_voxLevelSlider = new QSlider(Qt::Horizontal);
+        m_voxLevelSlider->setRange(0, 100);
+        m_voxLevelSlider->setStyleSheet(kSliderStyle);
+        connect(m_voxLevelSlider, &QSlider::valueChanged, this, [this](int v) {
+            if (!m_updatingFromModel && m_model) m_model->setVoxLevel(v);
+            m_voxLevelLabel->setText(QString::number(v));
+        });
+        row->addWidget(m_voxLevelSlider, 1);
+
+        m_voxLevelLabel = new QLabel("50");
+        m_voxLevelLabel->setFixedWidth(26);
+        m_voxLevelLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        m_voxLevelLabel->setStyleSheet("QLabel { color: #c8d8e8; font-size: 11px; }");
+        row->addWidget(m_voxLevelLabel);
+
+        vbox->addWidget(rowW);
+    }
+
+    // ── VOX delay row ────────────────────────────────────────────────────
+    {
+        auto* rowW = new QWidget;
+        rowW->setFixedHeight(24);
+        auto* row = new QHBoxLayout(rowW);
+        row->setContentsMargins(0, 0, 0, 0);
+        row->setSpacing(4);
+
+        auto* lbl = new QLabel("Delay:");
+        lbl->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        lbl->setStyleSheet("QLabel { color: #8090a0; font-size: 11px; }");
+        lbl->setFixedWidth(52);
+        row->addWidget(lbl);
+        row->addSpacing(10);
+
+        m_voxDelaySlider = new QSlider(Qt::Horizontal);
+        m_voxDelaySlider->setRange(0, 100);
+        m_voxDelaySlider->setStyleSheet(kSliderStyle);
+        connect(m_voxDelaySlider, &QSlider::valueChanged, this, [this](int v) {
+            if (!m_updatingFromModel && m_model) m_model->setVoxDelay(v);
+            m_voxDelayLabel->setText(QString::number(v));
+        });
+        row->addWidget(m_voxDelaySlider, 1);
+
+        m_voxDelayLabel = new QLabel("50");
+        m_voxDelayLabel->setFixedWidth(26);
+        m_voxDelayLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        m_voxDelayLabel->setStyleSheet("QLabel { color: #c8d8e8; font-size: 11px; }");
+        row->addWidget(m_voxDelayLabel);
+
+        vbox->addWidget(rowW);
+    }
+
+    // ── DEXP row: toggle + level slider ────────────────────────────────
+    // NOTE: DEXP (downward expander / noise gate) commands return error
+    // 0x5000002D on firmware v1.4.0.0. UI is present but non-functional
+    // until the correct protocol command is identified. See GitHub issue.
+    {
+        auto* rowW = new QWidget;
+        rowW->setFixedHeight(24);
+        auto* row = new QHBoxLayout(rowW);
+        row->setContentsMargins(0, 0, 0, 0);
+        row->setSpacing(4);
+
+        m_dexpBtn = new QPushButton("DEXP");
+        m_dexpBtn->setCheckable(true);
+        m_dexpBtn->setFixedSize(52, 22);
+        m_dexpBtn->setStyleSheet(kBtnBase + kBlueActive);
+        connect(m_dexpBtn, &QPushButton::toggled, this, [this](bool on) {
+            if (!m_updatingFromModel && m_model) m_model->setDexp(on);
+        });
+        row->addWidget(m_dexpBtn);
+        row->addSpacing(10);
+
+        m_dexpSlider = new QSlider(Qt::Horizontal);
+        m_dexpSlider->setRange(0, 100);
+        m_dexpSlider->setStyleSheet(kSliderStyle);
+        connect(m_dexpSlider, &QSlider::valueChanged, this, [this](int v) {
+            if (!m_updatingFromModel && m_model) m_model->setDexpLevel(v);
+            m_dexpLabel->setText(QString::number(v));
+        });
+        row->addWidget(m_dexpSlider, 1);
+
+        m_dexpLabel = new QLabel("0");
+        m_dexpLabel->setFixedWidth(26);
+        m_dexpLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        m_dexpLabel->setStyleSheet("QLabel { color: #c8d8e8; font-size: 11px; }");
+        row->addWidget(m_dexpLabel);
+
+        vbox->addWidget(rowW);
+    }
+
+    // ── TX filter section ────────────────────────────────────────────────
+    // Two columns: Low Cut (left) and High Cut (right), each with header
+    // centered over < value > step buttons.
+    {
+        auto* grid = new QHBoxLayout;
+        grid->setSpacing(0);
+
+        // ── Left column: Low Cut ─────────────────────────────────────────
+        auto* lowCol = new QVBoxLayout;
+        lowCol->setSpacing(1);
+
+        auto* lowLbl = new QLabel("Low Cut");
+        lowLbl->setAlignment(Qt::AlignCenter);
+        lowLbl->setStyleSheet("QLabel { color: #8090a0; font-size: 11px; }");
+        lowCol->addWidget(lowLbl);
+
+        auto* lowRow = new QHBoxLayout;
+        lowRow->setSpacing(2);
+
+        auto* txLbl = new QLabel("TX");
+        txLbl->setStyleSheet("QLabel { color: #8090a0; font-size: 11px; font-weight: bold; }");
+        txLbl->setFixedWidth(18);
+        lowRow->addWidget(txLbl);
+
+        m_lowCutDown = new QPushButton("<");
+        m_lowCutDown->setFixedSize(18, 20);
+        m_lowCutDown->setStyleSheet(kStepBtnStyle);
+        connect(m_lowCutDown, &QPushButton::clicked, this, [this]() {
+            if (m_model) m_model->setTxFilterLow(qMax(0, m_model->txFilterLow() - 50));
+        });
+        lowRow->addWidget(m_lowCutDown);
+
+        m_lowCutLabel = new QLabel("50");
+        m_lowCutLabel->setFixedWidth(46);
+        m_lowCutLabel->setAlignment(Qt::AlignCenter);
+        m_lowCutLabel->setStyleSheet(
+            "QLabel { font-size: 11px; color: #c8d8e8; background: #0a0a18; "
+            "border: 1px solid #1e2e3e; border-radius: 3px; padding: 1px 3px; }");
+        lowRow->addWidget(m_lowCutLabel);
+
+        m_lowCutUp = new QPushButton(">");
+        m_lowCutUp->setFixedSize(18, 20);
+        m_lowCutUp->setStyleSheet(kStepBtnStyle);
+        connect(m_lowCutUp, &QPushButton::clicked, this, [this]() {
+            if (m_model) m_model->setTxFilterLow(
+                qMin(m_model->txFilterHigh() - 50, m_model->txFilterLow() + 50));
+        });
+        lowRow->addWidget(m_lowCutUp);
+
+        lowCol->addLayout(lowRow);
+        grid->addLayout(lowCol);
+
+        grid->addStretch();
+
+        // ── Right column: High Cut ───────────────────────────────────────
+        auto* highCol = new QVBoxLayout;
+        highCol->setSpacing(1);
+
+        auto* highLbl = new QLabel("High Cut");
+        highLbl->setAlignment(Qt::AlignCenter);
+        highLbl->setStyleSheet("QLabel { color: #8090a0; font-size: 11px; }");
+        highCol->addWidget(highLbl);
+
+        auto* highRow = new QHBoxLayout;
+        highRow->setSpacing(2);
+
+        m_highCutDown = new QPushButton("<");
+        m_highCutDown->setFixedSize(18, 20);
+        m_highCutDown->setStyleSheet(kStepBtnStyle);
+        connect(m_highCutDown, &QPushButton::clicked, this, [this]() {
+            if (m_model) m_model->setTxFilterHigh(
+                qMax(m_model->txFilterLow() + 50, m_model->txFilterHigh() - 50));
+        });
+        highRow->addWidget(m_highCutDown);
+
+        m_highCutLabel = new QLabel("3300");
+        m_highCutLabel->setFixedWidth(46);
+        m_highCutLabel->setAlignment(Qt::AlignCenter);
+        m_highCutLabel->setStyleSheet(
+            "QLabel { font-size: 11px; color: #c8d8e8; background: #0a0a18; "
+            "border: 1px solid #1e2e3e; border-radius: 3px; padding: 1px 3px; }");
+        highRow->addWidget(m_highCutLabel);
+
+        m_highCutUp = new QPushButton(">");
+        m_highCutUp->setFixedSize(18, 20);
+        m_highCutUp->setStyleSheet(kStepBtnStyle);
+        connect(m_highCutUp, &QPushButton::clicked, this, [this]() {
+            if (m_model) m_model->setTxFilterHigh(
+                qMin(10000, m_model->txFilterHigh() + 50));
+        });
+        highRow->addWidget(m_highCutUp);
+
+        highCol->addLayout(highRow);
+        grid->addLayout(highCol);
+
+        vbox->addLayout(grid);
+    }
+
+}
+
+// ── Model binding ────────────────────────────────────────────────────────────
+
+void PhoneApplet::setTransmitModel(TransmitModel* model)
+{
+    m_model = model;
+    if (!model) return;
+
+    connect(model, &TransmitModel::phoneStateChanged, this, &PhoneApplet::syncFromModel);
+    syncFromModel();
+}
+
+void PhoneApplet::syncFromModel()
+{
+    if (!m_model) return;
+    m_updatingFromModel = true;
+
+    // AM Carrier
+    {
+        QSignalBlocker b(m_amCarrierSlider);
+        m_amCarrierSlider->setValue(m_model->amCarrierLevel());
+        m_amCarrierLabel->setText(QString::number(m_model->amCarrierLevel()));
+    }
+
+    // VOX
+    {
+        QSignalBlocker b(m_voxBtn);
+        m_voxBtn->setChecked(m_model->voxEnable());
+    }
+    {
+        QSignalBlocker b(m_voxLevelSlider);
+        m_voxLevelSlider->setValue(m_model->voxLevel());
+        m_voxLevelLabel->setText(QString::number(m_model->voxLevel()));
+    }
+    {
+        QSignalBlocker b(m_voxDelaySlider);
+        m_voxDelaySlider->setValue(m_model->voxDelay());
+        m_voxDelayLabel->setText(QString::number(m_model->voxDelay()));
+    }
+
+    // DEXP
+    {
+        QSignalBlocker b(m_dexpBtn);
+        m_dexpBtn->setChecked(m_model->dexpOn());
+    }
+    {
+        QSignalBlocker b(m_dexpSlider);
+        m_dexpSlider->setValue(m_model->dexpLevel());
+        m_dexpLabel->setText(QString::number(m_model->dexpLevel()));
+    }
+
+    // TX filter
+    m_lowCutLabel->setText(QString::number(m_model->txFilterLow()));
+    m_highCutLabel->setText(QString::number(m_model->txFilterHigh()));
+
+    m_updatingFromModel = false;
+}
+
+} // namespace AetherSDR

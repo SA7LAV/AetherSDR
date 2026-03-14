@@ -61,6 +61,7 @@ src/
     ├── TxApplet            — TX controls: power gauges/sliders, profiles, ATU, TUNE/MOX
     ├── TunerApplet         — 4o3a TGXL tuner: gauges, relay bars, TUNE/OPERATE
     ├── PhoneCwApplet       — P/CW mic controls: level/compression gauges, mic profile, PROC/DAX/MON
+    ├── PhoneApplet         — PHONE applet: VOX, AM carrier, DEXP, TX filter low/high
     └── HGauge.h            — Shared horizontal gauge widget (header-only)
 ```
 
@@ -340,6 +341,8 @@ them with `slice get <id>` rather than creating new ones.
   peak-hold marker, compression gauge (reversed red fill with slow decay)
 - P/CW applet: mic profile dropdown, mic source selector, mic level slider,
   +ACC toggle, PROC/NOR-DX-DX+, DAX toggle, MON + monitor volume
+- PHONE applet: AM Carrier slider, VOX toggle + level, VOX delay, DEXP toggle +
+  level (non-functional on fw v1.4.0.0), TX filter Low/High Cut step buttons
 - HGauge shared header: reusable horizontal gauge widget with three-zone fill,
   peak-hold markers, and reversed fill mode
 - TX button (sends `xmit 1` / `xmit 0`)

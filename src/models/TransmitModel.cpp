@@ -71,9 +71,92 @@ void TransmitModel::applyTransmitStatus(const QMap<QString, QString>& kvs)
         if (m_monGainSb != v) { m_monGainSb = v; micChanged = true; }
     }
 
+    // ── VOX keys ───────────────────────────────────────────────────────────
+    bool phoneChanged = false;
+
+    if (kvs.contains("vox_enable")) {
+        bool v = kvs["vox_enable"] == "1";
+        if (m_voxEnable != v) { m_voxEnable = v; phoneChanged = true; }
+    }
+    if (kvs.contains("vox_level")) {
+        int v = qBound(0, kvs["vox_level"].toInt(), 100);
+        if (m_voxLevel != v) { m_voxLevel = v; phoneChanged = true; }
+    }
+    if (kvs.contains("vox_delay")) {
+        int v = qBound(0, kvs["vox_delay"].toInt(), 100);
+        if (m_voxDelay != v) { m_voxDelay = v; phoneChanged = true; }
+    }
+    if (kvs.contains("mic_boost")) {
+        bool v = kvs["mic_boost"] == "1";
+        if (m_micBoost != v) { m_micBoost = v; phoneChanged = true; }
+    }
+    if (kvs.contains("am_carrier_level")) {
+        int v = qBound(0, kvs["am_carrier_level"].toInt(), 100);
+        if (m_amCarrierLevel != v) { m_amCarrierLevel = v; phoneChanged = true; }
+    }
+    if (kvs.contains("dexp")) {
+        bool v = kvs["dexp"] == "1";
+        if (m_dexpOn != v) { m_dexpOn = v; phoneChanged = true; }
+    }
+    if (kvs.contains("noise_gate_level")) {
+        int v = qBound(0, kvs["noise_gate_level"].toInt(), 100);
+        if (m_dexpLevel != v) { m_dexpLevel = v; phoneChanged = true; }
+    }
+    if (kvs.contains("lo")) {
+        int v = qBound(0, kvs["lo"].toInt(), 10000);
+        if (m_txFilterLow != v) { m_txFilterLow = v; phoneChanged = true; }
+    }
+    if (kvs.contains("hi")) {
+        int v = qBound(0, kvs["hi"].toInt(), 10000);
+        if (m_txFilterHigh != v) { m_txFilterHigh = v; phoneChanged = true; }
+    }
+
+    // ── CW keys ──────────────────────────────────────────────────────────
+    if (kvs.contains("speed")) {
+        int v = qBound(5, kvs["speed"].toInt(), 100);
+        if (m_cwSpeed != v) { m_cwSpeed = v; phoneChanged = true; }
+    }
+    if (kvs.contains("pitch")) {
+        int v = qBound(100, kvs["pitch"].toInt(), 6000);
+        if (m_cwPitch != v) { m_cwPitch = v; phoneChanged = true; }
+    }
+    if (kvs.contains("break_in")) {
+        bool v = kvs["break_in"] == "1";
+        if (m_cwBreakIn != v) { m_cwBreakIn = v; phoneChanged = true; }
+    }
+    if (kvs.contains("break_in_delay")) {
+        int v = qBound(0, kvs["break_in_delay"].toInt(), 2000);
+        if (m_cwDelay != v) { m_cwDelay = v; phoneChanged = true; }
+    }
+    if (kvs.contains("sidetone")) {
+        bool v = kvs["sidetone"] == "1";
+        if (m_cwSidetone != v) { m_cwSidetone = v; phoneChanged = true; }
+    }
+    if (kvs.contains("iambic")) {
+        bool v = kvs["iambic"] == "1";
+        if (m_cwIambic != v) { m_cwIambic = v; phoneChanged = true; }
+    }
+    if (kvs.contains("iambic_mode")) {
+        int v = qBound(0, kvs["iambic_mode"].toInt(), 1);
+        if (m_cwIambicMode != v) { m_cwIambicMode = v; phoneChanged = true; }
+    }
+    if (kvs.contains("swap_paddles")) {
+        bool v = kvs["swap_paddles"] == "1";
+        if (m_cwSwapPaddles != v) { m_cwSwapPaddles = v; phoneChanged = true; }
+    }
+    if (kvs.contains("cwl_enabled")) {
+        bool v = kvs["cwl_enabled"] == "1";
+        if (m_cwlEnabled != v) { m_cwlEnabled = v; phoneChanged = true; }
+    }
+    if (kvs.contains("mon_gain_cw")) {
+        int v = qBound(0, kvs["mon_gain_cw"].toInt(), 100);
+        if (m_monGainCw != v) { m_monGainCw = v; phoneChanged = true; }
+    }
+
     if (changed) emit stateChanged();
     if (tuneChanged_) emit tuneChanged(m_tune);
     if (micChanged) emit micStateChanged();
+    if (phoneChanged) emit phoneStateChanged();
 }
 
 void TransmitModel::applyAtuStatus(const QMap<QString, QString>& kvs)
@@ -239,6 +322,119 @@ void TransmitModel::setMonGainSb(int gain)
 void TransmitModel::loadMicProfile(const QString& name)
 {
     emit commandReady(QString("profile mic load \"%1\"").arg(name));
+}
+
+// ── VOX commands ────────────────────────────────────────────────────────────
+
+void TransmitModel::setVoxEnable(bool on)
+{
+    emit commandReady(QString("transmit set vox_enable=%1").arg(on ? 1 : 0));
+}
+
+void TransmitModel::setVoxLevel(int level)
+{
+    level = qBound(0, level, 100);
+    emit commandReady(QString("transmit set vox_level=%1").arg(level));
+}
+
+void TransmitModel::setVoxDelay(int delay)
+{
+    delay = qBound(0, delay, 100);
+    emit commandReady(QString("transmit set vox_delay=%1").arg(delay));
+}
+
+void TransmitModel::setMicBoost(bool on)
+{
+    emit commandReady(QString("mic boost %1").arg(on ? 1 : 0));
+}
+
+void TransmitModel::setAmCarrierLevel(int level)
+{
+    level = qBound(0, level, 100);
+    emit commandReady(QString("transmit set am_carrier=%1").arg(level));
+}
+
+void TransmitModel::setDexp(bool on)
+{
+    // DEXP (downward expander / noise gate) — firmware v1.4.0.0
+    emit commandReady(QString("transmit set dexp=%1").arg(on ? 1 : 0));
+}
+
+void TransmitModel::setDexpLevel(int level)
+{
+    level = qBound(0, level, 100);
+    emit commandReady(QString("transmit set noise_gate_level=%1").arg(level));
+}
+
+void TransmitModel::setTxFilterLow(int hz)
+{
+    hz = qBound(0, hz, 10000);
+    emit commandReady(QString("transmit set filter_low=%1 filter_high=%2")
+                      .arg(hz).arg(m_txFilterHigh));
+}
+
+void TransmitModel::setTxFilterHigh(int hz)
+{
+    hz = qBound(0, hz, 10000);
+    emit commandReady(QString("transmit set filter_low=%1 filter_high=%2")
+                      .arg(m_txFilterLow).arg(hz));
+}
+
+// ── CW commands ─────────────────────────────────────────────────────────────
+
+void TransmitModel::setCwSpeed(int wpm)
+{
+    wpm = qBound(5, wpm, 100);
+    emit commandReady(QString("cw wpm %1").arg(wpm));
+}
+
+void TransmitModel::setCwPitch(int hz)
+{
+    hz = qBound(100, hz, 6000);
+    emit commandReady(QString("cw pitch %1").arg(hz));
+}
+
+void TransmitModel::setCwBreakIn(bool on)
+{
+    emit commandReady(QString("cw break_in %1").arg(on ? 1 : 0));
+}
+
+void TransmitModel::setCwDelay(int ms)
+{
+    ms = qBound(0, ms, 2000);
+    emit commandReady(QString("cw break_in_delay %1").arg(ms));
+}
+
+void TransmitModel::setCwSidetone(bool on)
+{
+    emit commandReady(QString("cw sidetone %1").arg(on ? 1 : 0));
+}
+
+void TransmitModel::setCwIambic(bool on)
+{
+    emit commandReady(QString("cw iambic %1").arg(on ? 1 : 0));
+}
+
+void TransmitModel::setCwIambicMode(int mode)
+{
+    mode = qBound(0, mode, 1);
+    emit commandReady(QString("cw mode %1").arg(mode));
+}
+
+void TransmitModel::setCwSwapPaddles(bool on)
+{
+    emit commandReady(QString("cw swap %1").arg(on ? 1 : 0));
+}
+
+void TransmitModel::setCwlEnabled(bool on)
+{
+    emit commandReady(QString("cw cwl_enabled %1").arg(on ? 1 : 0));
+}
+
+void TransmitModel::setMonGainCw(int gain)
+{
+    gain = qBound(0, gain, 100);
+    emit commandReady(QString("transmit set mon_gain_cw=%1").arg(gain));
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────

@@ -52,6 +52,10 @@ Current version: **0.1.8**
 | P/CW applet — mic source selector, mic level slider, +ACC toggle | ✅ |
 | P/CW applet — PROC button + NOR/DX/DX+ 3-position slider + DAX toggle | ✅ |
 | P/CW applet — MON button + monitor volume slider | ✅ |
+| PHONE applet — AM Carrier level slider | ✅ |
+| PHONE applet — VOX toggle + level slider, VOX delay slider | ✅ |
+| PHONE applet — DEXP toggle + level slider | ⚠️ fw v1.4.0.0 rejects commands |
+| PHONE applet — TX filter Low Cut / High Cut step buttons | ✅ |
 | Audio TX (microphone → radio) | ⚠️ stub |
 | Volume / mute control | ✅ |
 | TX button | ✅ |
@@ -86,6 +90,7 @@ src/
     ├── TxApplet.h/.cpp          # TX controls applet (power, ATU, profiles)
     ├── TunerApplet.h/.cpp       # TGXL tuner applet
     ├── PhoneCwApplet.h/.cpp     # P/CW mic controls applet
+    ├── PhoneApplet.h/.cpp       # PHONE applet (VOX, AM carrier, TX filter)
     └── HGauge.h                 # Shared horizontal gauge widget (header-only)
 ```
 
@@ -234,6 +239,11 @@ model-driven dial updates back to the radio.
 ## Changelog
 
 ### v0.1.8
+- PHONE applet: AM Carrier level slider, VOX toggle + level slider, VOX delay
+  slider, DEXP toggle + level slider (non-functional on fw v1.4.0.0), TX filter
+  Low Cut / High Cut step buttons with inset frequency displays
+- TransmitModel: extended with VOX enable/level/delay, AM carrier level, DEXP
+  on/level, TX filter low/high commands and status parsing
 - P/CW applet: mic level horizontal gauge (-40 to +10 dB) with three-zone
   colouring (cyan/yellow/red) and peak-hold white marker, fed by VITA-49
   MIC and MICPEAK meters (PCC 0x8002, source COD-)
